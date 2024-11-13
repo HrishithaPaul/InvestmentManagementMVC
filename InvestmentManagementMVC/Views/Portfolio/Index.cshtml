@@ -1,0 +1,93 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio API - POST and PUT Methods</title>
+</head>
+<body>
+    <h1>Portfolio API - Add and Update</h1>
+
+    <!-- Form for Adding/Updating Portfolio -->
+    <form id="portfolioForm">
+        <label for="portfolioId">Portfolio ID:</label>
+        <input type="number" id="portfolioId" name="portfolioId" required><br><br>
+
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required><br><br>
+
+        <label for="userId">User ID:</label>
+        <input type="number" id="userId" name="userId" required><br><br>
+
+        <label for="description">Description:</label>
+        <textarea id="description" name="description" required></textarea><br><br>
+
+        <label for="totalValue">Total Value:</label>
+        <input type="number" id="totalValue" name="totalValue" step="0.01" required><br><br>
+
+        <!-- Buttons for POST and PUT operations -->
+        <button type="button" onclick="sendRequest('POST')">Add Portfolio (POST)</button>
+        <button type="button" onclick="sendRequest('PUT')">Update Portfolio (PUT)</button>
+    </form>
+
+    <label id="responseMessage" style="color: green;"></label>
+
+    <script>
+        const apiUrl = 'https://localhost:7269/api/Portfolios';
+
+        function displayMessage(message, isError = false) {
+            const responseLabel = document.getElementById("responseMessage");
+            responseLabel.style.color = isError ? "red" : "green";
+            responseLabel.textContent = message;
+        }
+
+        // Function to handle POST and PUT requests
+        async function sendRequest(method) {
+            const portfolioId = document.getElementById("portfolioId").value;
+            const name = document.getElementById("name").value;
+            const userId = document.getElementById("userId").value;
+            const description = document.getElementById("description").value;
+            const totalValue = document.getElementById("totalValue").value;
+
+            if (!portfolioId || !name || !userId || !description || !totalValue) {
+                displayMessage("All fields are required!", true);
+                return;
+            }
+
+            const data = {
+                portfolioId: parseInt(portfolioId),
+                name: name,
+                userId: parseInt(userId),
+                description: description,
+                totalValue: parseFloat(totalValue)
+            };
+
+            const url = method === 'PUT' ? `${apiUrl}/${portfolioId}` : apiUrl;
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Request failed with status ${response.status}`);
+                }
+
+            if (method === 'POST') {
+                    const result = await response.json();
+                    displayMessage(`Portfolio added successfully: ${JSON.stringify(result)}`);
+                } else {
+                    displayMessage("Portfolio updated successfully.");
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                displayMessage(`Error: ${error.message}`, true);
+            }
+        }
+    </script>
+</body>
+</html>

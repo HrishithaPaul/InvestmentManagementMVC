@@ -1,0 +1,153 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin API - CRUD Operations</title>
+</head>
+<body>
+    <h1>Admin Management - CRUD Operations</h1>
+
+    <!-- Add or Update Admin Form -->
+    <h2>Add or Update Admin Form</h2>
+    <form id="AdminForm">
+        <label for="adminId">Admin ID:</label>
+        <input type="number" id="adminId" name="adminId" required><br><br>
+
+        <label for="firstName">First Name:</label>
+        <input type="text" id="firstName" name="firstName" required><br><br>
+
+        <label for="lastName">Last Name:</label>
+        <input type="text" id="lastName" name="lastName" required><br><br>
+
+        <label for="adminEmail">Admin Email:</label>
+        <input type="text" id="adminEmail" name="adminEmail" required><br><br>
+
+        <label for="adminPassword">Admin Password:</label>
+        <input type="text" id="adminPassword" name="adminPassword" required><br><br>
+
+        <!-- Buttons for POST, PUT, and DELETE operations -->
+        <button type="button" onclick="sendRequest('POST')">Add Admin (POST)</button>
+        <button type="button" onclick="sendRequest('PUT')">Update Admin (PUT)</button>
+        <button type="button" onclick="deleteAdmin()">Delete Admin</button>
+    </form>
+    <label id="responseMessage" style="color: green;"></label>
+
+    <!-- View All Admins -->
+    <h2>View All Admins</h2>
+    <button type="button" onclick="fetchAllAdmins()">Get All Admins</button>
+    <div id="adminsList"></div>
+
+    <script>
+        const apiUrl = 'https://localhost:7269/api/Admins';
+
+        function displayMessage(message, isError = false) {
+            const responseLabel = document.getElementById("responseMessage");
+            responseLabel.style.color = isError ? "red" : "green";
+            responseLabel.textContent = message;
+        }
+
+        function sendRequest(method) {
+            const adminId = document.getElementById("adminId").value;
+            const firstName = document.getElementById("firstName").value;
+            const lastName = document.getElementById("lastName").value;
+            const adminEmail = document.getElementById("adminEmail").value;
+            const adminPassword = document.getElementById("adminPassword").value;
+
+            if (!adminId || !firstName || !lastName || !adminEmail || !adminPassword) {
+                displayMessage("All fields are required!", true);
+                return;
+            }
+
+            const data = {
+                adminId: parseInt(adminId),
+                firstname: firstName,
+                lastname: lastName,
+                adminEmail: adminEmail,
+                adminPassword: adminPassword
+            };
+
+            const endpoint = method === 'PUT' ? `${apiUrl}/${adminId}` : apiUrl;
+
+            fetch(endpoint, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (response.status === 204) {
+                    displayMessage(`${method} Success: No content returned`);
+                    return {};
+                }
+                if (!response.ok) {
+                    throw new Error(`Request failed with status ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                displayMessage(`${method} Success: ${JSON.stringify(data)}`);
+                fetchAllAdmins();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                displayMessage(`Error: ${error.message}`, true);
+            });
+        }
+
+        function deleteAdmin() {
+            const adminId = document.getElementById("adminId").value;
+            if (!adminId) {
+                displayMessage("Please enter an admin ID to delete", true);
+                return;
+            }
+
+            fetch(`${apiUrl}/${adminId}`, { method: 'DELETE' })
+            .then(response => {
+                if (response.status === 204) {
+                    displayMessage(`DELETE Success: Admin ID ${adminId} deleted`);
+                    fetchAllAdmins();
+                    return;
+                }
+                if (!response.ok) {
+                    throw new Error(`Request failed with status ${response.status}`);
+                }
+                return response.json();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                displayMessage(`Error: ${error.message}`, true);
+            });
+        }
+
+        function fetchAllAdmins() {
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Request failed with status ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => displayAdmins(data))
+                .catch(error => {
+                    console.error('Error:', error);
+                    displayMessage(`Error: ${error.message}`, true);
+                });
+        }
+
+        function displayAdmins(admins) {
+            const adminsList = document.getElementById("adminsList");
+            adminsList.innerHTML = "<h3>Admins:</h3>";
+            adminsList.innerHTML += admins.map(admin => `
+                <div>
+                    <p><b>ID:</b> ${admin.adminId}</p>
+                    <p><b>First Name:</b> ${admin.firstname}</p>
+                    <p><b>Last Name:</b> ${admin.lastname}</p>
+                    <p><b>Email:</b> ${admin.adminEmail}</p>
+                    <p><b>Password:</b> ${admin.adminPassword}</p>
+                    <hr>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
